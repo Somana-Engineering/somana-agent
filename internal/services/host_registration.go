@@ -185,10 +185,8 @@ func (s *HostRegistrationService) startHeartbeat() {
 func (s *HostRegistrationService) sendHeartbeat() error {
 	ctx := context.Background()
 	
-	status := client.HostHeartbeatRequestStatusOnline
-	reqBody := client.HostHeartbeatRequest{
-		Status: &status,
-	}
+	// API changed: status field removed, server tracks last_heartbeat automatically
+	reqBody := client.HostHeartbeatRequest{}
 
 	resp, err := s.client.PostApiV1HostsIdHeartbeatWithResponse(ctx, s.hostID, reqBody)
 	if err != nil {

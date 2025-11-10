@@ -1,0 +1,79 @@
+version: 2.1
+
+jobs:
+  test:
+    machine:
+      image: ubuntu-2004:current
+    steps:
+      - checkout
+      - run: |
+          curl -L https://go.dev/dl/go1.23.0.linux-amd64.tar.gz | sudo tar -xzC /usr/local
+          echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+          source ~/.bashrc
+      - run: make install-tools
+      - run: make generate
+      - run: make deps
+      - run: make test
+
+  build-and-publish:
+    machine:
+      image: ubuntu-2004:current
+    steps:
+      - checkout
+      - run: |
+          curl -L https://go.dev/dl/go1.23.0.linux-amd64.tar.gz | sudo tar -xzC /usr/local
+          echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+          source ~/.bashrc
+      - run: make install-tools
+      - run: make generate
+      - run: make deps
+      - run: |
+          # Build for multiple architectures
+          mkdir -p bin
+          echo "Building for Linux AMD64..."
+          GOOS=linux GOARCH=amd64 go build -o bin/somana-agent-linux-amd64 ./cmd/server
+          
+          echo "Building for Linux ARM64..."
+          GOOS=linux GOARCH=arm64 go build -o bin/somana-agent-linux-arm64 ./cmd/server
+          
+          echo "Building for macOS AMD64..."
+          GOOS=darwin GOARCH=amd64 go build -o bin/somana-agent-darwin-amd64 ./cmd/server
+          
+          echo "Building for macOS ARM64 (Apple Silicon)..."
+          GOOS=darwin GOARCH=arm64 go build -o bin/somana-agent-darwin-arm64 ./cmd/server
+          
+          echo "Build complete! Binaries:"
+          ls -la bin/
+      - run: |
+          # Install GitHub CLI
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh -y
+      - run: |
+          # Auto-increment version based on commit count
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          VERSION="v1.0.$COMMIT_COUNT"
+          echo "Using auto-incremented version: $VERSION"
+          
+          # Create GitHub release with binaries (no OpenAPI spec)
+          echo "Creating GitHub release with version: $VERSION"
+          gh release create $VERSION \
+            bin/somana-agent-linux-amd64 \
+            bin/somana-agent-linux-arm64 \
+            bin/somana-agent-darwin-amd64 \
+            bin/somana-agent-darwin-arm64 \
+            --title "Somana Agent $VERSION" \
+            --notes "Somana Agent $VERSION - Built and tested on CircleCI with multi-architecture support for Linux and macOS"
+
+workflows:
+  version: 2
+  test-and-build:
+    jobs:
+      - test
+      - build-and-publish:
+          requires:
+            - test
+          filters:
+            branches:
+              only: main
