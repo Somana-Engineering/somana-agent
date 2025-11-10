@@ -35,12 +35,12 @@ jobs:
           sudo apt-get install -y gcc-aarch64-linux-gnu gcc-x86-64-linux-gnu
       - run: |
           export PATH=$PATH:/usr/local/go/bin
-          # Build for multiple architectures with CGO enabled
+          # Build for multiple architectures with CGO enabled and static linking
           mkdir -p bin
-          # Linux AMD64
-          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 CC=x86_64-linux-gnu-gcc go build -o bin/somana-agent-linux-amd64 ./cmd/server
-          # Linux ARM64
-          CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC=aarch64-linux-gnu-gcc go build -o bin/somana-agent-linux-arm64 ./cmd/server
+          # Linux AMD64 (statically linked)
+          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 CC=x86_64-linux-gnu-gcc go build -ldflags="-linkmode external -extldflags -static" -tags "osusergo netgo static_build" -o bin/somana-agent-linux-amd64 ./cmd/server
+          # Linux ARM64 (statically linked)
+          CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC=aarch64-linux-gnu-gcc go build -ldflags="-linkmode external -extldflags -static" -tags "osusergo netgo static_build" -o bin/somana-agent-linux-arm64 ./cmd/server
           # macOS AMD64 (CGO disabled for cross-compilation from Linux)
           CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o bin/somana-agent-darwin-amd64 ./cmd/server
           # macOS ARM64 (CGO disabled for cross-compilation from Linux)
