@@ -8,85 +8,30 @@ jobs:
       - checkout
       - run: |
           curl -L https://go.dev/dl/go1.23.0.linux-amd64.tar.gz | sudo tar -xzC /usr/local
-          echo 'export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin' >> ~/.bashrc
-          export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
-      - run: |
+          echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
           export PATH=$PATH:/usr/local/go/bin
-          # Get the actual GOPATH
-          GOPATH=$(go env GOPATH)
-          GOBIN_DIR="$GOPATH/bin"
-          export PATH=$PATH:$GOBIN_DIR
-          echo "GOPATH: $GOPATH"
-          echo "GOBIN_DIR: $GOBIN_DIR"
-          # Ensure the bin directory exists
-          mkdir -p $GOBIN_DIR
-          # Install oapi-codegen
-          go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
-          # Wait a moment for the install to complete
-          sleep 2
-          # Verify oapi-codegen was installed
-          if [ -f "$GOBIN_DIR/oapi-codegen" ]; then
-            echo "Found oapi-codegen at $GOBIN_DIR/oapi-codegen"
-            chmod +x $GOBIN_DIR/oapi-codegen
-            ls -la $GOBIN_DIR/oapi-codegen
-          elif command -v oapi-codegen > /dev/null; then
-            echo "Found oapi-codegen in PATH: $(which oapi-codegen)"
-          else
-            echo "ERROR: oapi-codegen not found. Checking locations:"
-            ls -la $GOBIN_DIR/ || echo "$GOBIN_DIR/ does not exist"
-            ls -la $HOME/go/bin/ || echo "$HOME/go/bin/ does not exist"
-            exit 1
-          fi
+      - run: go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
       - run: |
-          export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
           # Download OpenAPI specification from somana repo
           mkdir -p api
           curl -L -o api/openapi.yaml https://github.com/miku-kookie/somana/releases/download/v1.0.29/openapi.yaml
-          echo "OpenAPI specification downloaded to api/openapi.yaml"
-          # Verify OpenAPI spec exists
-          test -s api/openapi.yaml || (echo "ERROR: OpenAPI spec not found or empty!" && exit 1)
       - run: |
-          export PATH=$PATH:/usr/local/go/bin
-          GOPATH=$(go env GOPATH)
-          GOBIN_DIR="$GOPATH/bin"
-          export PATH=$PATH:$GOBIN_DIR
-          # Find oapi-codegen binary
-          OAPI_CODEGEN=$(which oapi-codegen || echo "$GOBIN_DIR/oapi-codegen")
-          echo "Using oapi-codegen at: $OAPI_CODEGEN"
-          # Verify it exists
-          test -f "$OAPI_CODEGEN" || (echo "ERROR: oapi-codegen not found at $OAPI_CODEGEN" && exit 1)
           # Generate code from OpenAPI spec
           mkdir -p internal/generated internal/client
-          $OAPI_CODEGEN -package generated -generate types api/openapi.yaml > internal/generated/types.go
-          $OAPI_CODEGEN -package generated -generate gin-server api/openapi.yaml > internal/generated/server.go
-          $OAPI_CODEGEN -package client -generate types,client api/openapi.yaml > internal/client/client.go
-          # Verify generated files exist and are not empty
-          test -s internal/generated/types.go || (echo "ERROR: types.go is empty!" && exit 1)
-          test -s internal/generated/server.go || (echo "ERROR: server.go is empty!" && exit 1)
-          test -s internal/client/client.go || (echo "ERROR: client.go is empty!" && exit 1)
+          ~/go/bin/oapi-codegen -package generated -generate types api/openapi.yaml > internal/generated/types.go
+          ~/go/bin/oapi-codegen -package generated -generate gin-server api/openapi.yaml > internal/generated/server.go
+          ~/go/bin/oapi-codegen -package client -generate types,client api/openapi.yaml > internal/client/client.go
       - run: |
-          export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
           # Install dependencies
           go mod download
           go get github.com/oapi-codegen/runtime
       - run: |
-          export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
           # Build for multiple architectures
           mkdir -p bin
-          echo "Building for Linux AMD64..."
           GOOS=linux GOARCH=amd64 go build -o bin/somana-agent-linux-amd64 ./cmd/server
-          
-          echo "Building for Linux ARM64..."
           GOOS=linux GOARCH=arm64 go build -o bin/somana-agent-linux-arm64 ./cmd/server
-          
-          echo "Building for macOS AMD64..."
           GOOS=darwin GOARCH=amd64 go build -o bin/somana-agent-darwin-amd64 ./cmd/server
-          
-          echo "Building for macOS ARM64 (Apple Silicon)..."
           GOOS=darwin GOARCH=arm64 go build -o bin/somana-agent-darwin-arm64 ./cmd/server
-          
-          echo "Build complete! Binaries:"
-          ls -la bin/
       - run: |
           # Install GitHub CLI
           curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
@@ -97,10 +42,6 @@ jobs:
           # Auto-increment version based on commit count
           COMMIT_COUNT=$(git rev-list --count HEAD)
           VERSION="v1.0.$COMMIT_COUNT"
-          echo "Using auto-incremented version: $VERSION"
-          
-          # Create GitHub release with binaries (no OpenAPI spec)
-          echo "Creating GitHub release with version: $VERSION"
           gh release create $VERSION \
             bin/somana-agent-linux-amd64 \
             bin/somana-agent-linux-arm64 \
