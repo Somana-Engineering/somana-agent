@@ -30,12 +30,21 @@ jobs:
           go mod download
           go get github.com/oapi-codegen/runtime
       - run: |
-          # Build for multiple architectures
+          # Install cross-compilation toolchains for CGO
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu gcc-x86-64-linux-gnu
+      - run: |
+          export PATH=$PATH:/usr/local/go/bin
+          # Build for multiple architectures with CGO enabled
           mkdir -p bin
-          GOOS=linux GOARCH=amd64 go build -o bin/somana-agent-linux-amd64 ./cmd/server
-          GOOS=linux GOARCH=arm64 go build -o bin/somana-agent-linux-arm64 ./cmd/server
-          GOOS=darwin GOARCH=amd64 go build -o bin/somana-agent-darwin-amd64 ./cmd/server
-          GOOS=darwin GOARCH=arm64 go build -o bin/somana-agent-darwin-arm64 ./cmd/server
+          # Linux AMD64
+          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 CC=x86_64-linux-gnu-gcc go build -o bin/somana-agent-linux-amd64 ./cmd/server
+          # Linux ARM64
+          CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC=aarch64-linux-gnu-gcc go build -o bin/somana-agent-linux-arm64 ./cmd/server
+          # macOS AMD64 (CGO disabled for cross-compilation from Linux)
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o bin/somana-agent-darwin-amd64 ./cmd/server
+          # macOS ARM64 (CGO disabled for cross-compilation from Linux)
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o bin/somana-agent-darwin-arm64 ./cmd/server
       - run: |
           # Install GitHub CLI
           curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
