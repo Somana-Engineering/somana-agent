@@ -80,6 +80,16 @@ func (s *HostRegistrationService) Start() error {
 	return nil
 }
 
+// GetHostID returns the host ID
+func (s *HostRegistrationService) GetHostID() int {
+	return s.hostID
+}
+
+// GetClient returns the API client
+func (s *HostRegistrationService) GetClient() *client.ClientWithResponses {
+	return s.client
+}
+
 // Stop stops the heartbeat process
 func (s *HostRegistrationService) Stop() {
 	if s.config.HostRegistration.SomanaURL != "" {

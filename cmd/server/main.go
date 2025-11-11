@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"log"
+	"time"
 
 	"somana-agent/internal/config"
-	"somana-agent/internal/database"
 	"somana-agent/internal/services"
 )
 
@@ -20,17 +20,27 @@ func main() {
 		log.Fatal("Failed to load configuration:", err)
 	}
 
-	// Initialize database
-	if err := database.InitDatabase(); err != nil {
-		log.Fatal("Failed to initialize database:", err)
-	}
-
 	// Create host registration service
 	hostRegService := services.NewHostRegistrationService(cfg)
 
 	// Start host registration and heartbeat
 	if err := hostRegService.Start(); err != nil {
 		log.Printf("Warning: Failed to start host registration: %v", err)
+	}
+
+	// Wait a moment for host registration to complete
+	time.Sleep(2 * time.Second)
+
+	// Start systemd monitoring service
+	hostID := hostRegService.GetHostID()
+	if hostID > 0 {
+		apiClient := hostRegService.GetClient()
+		if apiClient != nil {
+			systemdMonitor := services.NewSystemdMonitorService(cfg, apiClient, hostID)
+			if err := systemdMonitor.Start(); err != nil {
+				log.Printf("Warning: Failed to start systemd monitoring: %v", err)
+			}
+		}
 	}
 
 	// Comment out Gin server for now - focus on host registration debugging

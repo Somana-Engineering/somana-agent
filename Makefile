@@ -6,7 +6,7 @@ BUILD_DIR=bin
 MAIN_PATH=./cmd/server
 GO_VERSION=1.21.6
 GO_ARCH=linux-arm64
-OPENAPI_VERSION=v1.0.29
+OPENAPI_VERSION=v1.0.30
 
 # Go parameters - check if go is available, otherwise use full path
 GOCMD=$(shell if command -v go > /dev/null; then echo go; else echo /usr/local/go/bin/go; fi)

@@ -49,6 +49,9 @@ type Host struct {
 	// OsVersion Operating system version
 	OsVersion string `json:"os_version"`
 
+	// SystemdUnits List of systemd units on this host
+	SystemdUnits *[]SystemdUnit `json:"systemd_units,omitempty"`
+
 	// UpdatedAt When the host was last updated
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -80,6 +83,30 @@ type HostUpdateRequest struct {
 	IpAddress *string `json:"ip_address,omitempty"`
 }
 
+// SystemdServicesRequest defines model for SystemdServicesRequest.
+type SystemdServicesRequest struct {
+	// Services List of systemd units/services
+	Services []SystemdUnit `json:"services"`
+}
+
+// SystemdUnit defines model for SystemdUnit.
+type SystemdUnit struct {
+	// Active Unit active state (active, inactive, activating, deactivating, failed)
+	Active string `json:"active"`
+
+	// Description Unit description
+	Description string `json:"description"`
+
+	// Load Unit load state (loaded, not-found, error, masked)
+	Load string `json:"load"`
+
+	// Sub Unit sub state (running, dead, exited, etc.)
+	Sub string `json:"sub"`
+
+	// Unit Systemd unit name
+	Unit string `json:"unit"`
+}
+
 // PostApiV1HostsJSONRequestBody defines body for PostApiV1Hosts for application/json ContentType.
 type PostApiV1HostsJSONRequestBody = HostCreateRequest
 
@@ -88,6 +115,9 @@ type PutApiV1HostsIdJSONRequestBody = HostUpdateRequest
 
 // PostApiV1HostsIdHeartbeatJSONRequestBody defines body for PostApiV1HostsIdHeartbeat for application/json ContentType.
 type PostApiV1HostsIdHeartbeatJSONRequestBody = HostHeartbeatRequest
+
+// PutApiV1HostsIdSystemdServicesJSONRequestBody defines body for PutApiV1HostsIdSystemdServices for application/json ContentType.
+type PutApiV1HostsIdSystemdServicesJSONRequestBody = SystemdServicesRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -185,6 +215,11 @@ type ClientInterface interface {
 	PostApiV1HostsIdHeartbeatWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostApiV1HostsIdHeartbeat(ctx context.Context, id int, body PostApiV1HostsIdHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutApiV1HostsIdSystemdServicesWithBody request with any body
+	PutApiV1HostsIdSystemdServicesWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutApiV1HostsIdSystemdServices(ctx context.Context, id int, body PutApiV1HostsIdSystemdServicesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetHealth request
 	GetHealth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -288,6 +323,30 @@ func (c *Client) PostApiV1HostsIdHeartbeatWithBody(ctx context.Context, id int, 
 
 func (c *Client) PostApiV1HostsIdHeartbeat(ctx context.Context, id int, body PostApiV1HostsIdHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV1HostsIdHeartbeatRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutApiV1HostsIdSystemdServicesWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutApiV1HostsIdSystemdServicesRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutApiV1HostsIdSystemdServices(ctx context.Context, id int, body PutApiV1HostsIdSystemdServicesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutApiV1HostsIdSystemdServicesRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -539,6 +598,53 @@ func NewPostApiV1HostsIdHeartbeatRequestWithBody(server string, id int, contentT
 	return req, nil
 }
 
+// NewPutApiV1HostsIdSystemdServicesRequest calls the generic PutApiV1HostsIdSystemdServices builder with application/json body
+func NewPutApiV1HostsIdSystemdServicesRequest(server string, id int, body PutApiV1HostsIdSystemdServicesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutApiV1HostsIdSystemdServicesRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewPutApiV1HostsIdSystemdServicesRequestWithBody generates requests for PutApiV1HostsIdSystemdServices with any type of body
+func NewPutApiV1HostsIdSystemdServicesRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/hosts/%s/systemd-services", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetHealthRequest generates requests for GetHealth
 func NewGetHealthRequest(server string) (*http.Request, error) {
 	var err error
@@ -632,6 +738,11 @@ type ClientWithResponsesInterface interface {
 	PostApiV1HostsIdHeartbeatWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1HostsIdHeartbeatResponse, error)
 
 	PostApiV1HostsIdHeartbeatWithResponse(ctx context.Context, id int, body PostApiV1HostsIdHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1HostsIdHeartbeatResponse, error)
+
+	// PutApiV1HostsIdSystemdServicesWithBodyWithResponse request with any body
+	PutApiV1HostsIdSystemdServicesWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiV1HostsIdSystemdServicesResponse, error)
+
+	PutApiV1HostsIdSystemdServicesWithResponse(ctx context.Context, id int, body PutApiV1HostsIdSystemdServicesJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiV1HostsIdSystemdServicesResponse, error)
 
 	// GetHealthWithResponse request
 	GetHealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthResponse, error)
@@ -780,6 +891,31 @@ func (r PostApiV1HostsIdHeartbeatResponse) StatusCode() int {
 	return 0
 }
 
+type PutApiV1HostsIdSystemdServicesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Host
+	JSON400      *Error
+	JSON404      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PutApiV1HostsIdSystemdServicesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutApiV1HostsIdSystemdServicesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetHealthResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -882,6 +1018,23 @@ func (c *ClientWithResponses) PostApiV1HostsIdHeartbeatWithResponse(ctx context.
 		return nil, err
 	}
 	return ParsePostApiV1HostsIdHeartbeatResponse(rsp)
+}
+
+// PutApiV1HostsIdSystemdServicesWithBodyWithResponse request with arbitrary body returning *PutApiV1HostsIdSystemdServicesResponse
+func (c *ClientWithResponses) PutApiV1HostsIdSystemdServicesWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiV1HostsIdSystemdServicesResponse, error) {
+	rsp, err := c.PutApiV1HostsIdSystemdServicesWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutApiV1HostsIdSystemdServicesResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutApiV1HostsIdSystemdServicesWithResponse(ctx context.Context, id int, body PutApiV1HostsIdSystemdServicesJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiV1HostsIdSystemdServicesResponse, error) {
+	rsp, err := c.PutApiV1HostsIdSystemdServices(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutApiV1HostsIdSystemdServicesResponse(rsp)
 }
 
 // GetHealthWithResponse request returning *GetHealthResponse
@@ -1106,6 +1259,53 @@ func ParsePostApiV1HostsIdHeartbeatResponse(rsp *http.Response) (*PostApiV1Hosts
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutApiV1HostsIdSystemdServicesResponse parses an HTTP response from a PutApiV1HostsIdSystemdServicesWithResponse call
+func ParsePutApiV1HostsIdSystemdServicesResponse(rsp *http.Response) (*PutApiV1HostsIdSystemdServicesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutApiV1HostsIdSystemdServicesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Host
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest Error
