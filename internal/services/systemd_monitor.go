@@ -108,7 +108,7 @@ func (s *SystemdMonitorService) getSystemdServices() ([]client.SystemdUnit, erro
 	}
 
 	// Run systemctl list-units command
-	cmd := exec.Command("systemctl", "list-units", "--type=service", "--all", "--no-pager", "--no-legend")
+	cmd := exec.Command("systemctl", "list-units", "--type=service", "--no-pager", "--no-legend")
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("failed to run systemctl: %w", err)
