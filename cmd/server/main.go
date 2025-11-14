@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"somana-agent/internal/config"
-	"somana-agent/internal/services"
+	"sprinter-agent/internal/config"
+	"sprinter-agent/internal/services"
 )
 
 func main() {
@@ -55,7 +55,7 @@ func main() {
 	generated.RegisterHandlers(r, hostService)
 
 	// Start server
-	log.Println("Starting Somana Agent server on :9000")
+	log.Println("Starting Sprinter Agent server on :9000")
 	if err := r.Run(":9000"); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}

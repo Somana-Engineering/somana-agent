@@ -1,4 +1,4 @@
-# Somana Agent
+# Sprinter Agent
 
 A Go-based agent for managing and monitoring sensors with a RESTful API.
 
@@ -8,8 +8,8 @@ A Go-based agent for managing and monitoring sensors with a RESTful API.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/miku-kookie/somana-agent.git
-cd somana-agent
+git clone https://github.com/miku-kookie/sprinter-agent.git
+cd sprinter-agent
 ```
 
 2. Run the setup script:
@@ -62,17 +62,17 @@ make build
 
 ### Start the Service
 ```bash
-sudo systemctl start somana-agent
+sudo systemctl start sprinter-agent
 ```
 
 ### Check Status
 ```bash
-sudo systemctl status somana-agent
+sudo systemctl status sprinter-agent
 ```
 
 ### View Logs
 ```bash
-journalctl -u somana-agent -f
+journalctl -u sprinter-agent -f
 ```
 
 ### Manual Run (for testing)
@@ -119,15 +119,13 @@ The API will be available at:
 ### Project Structure
 
 ```
-somana-agent/
+sprinter-agent/
 ├── cmd/server/          # Main application entry point
 ├── internal/
-│   ├── database/        # Database models and initialization
 │   ├── generated/       # Generated code from OpenAPI spec
 │   └── services/        # Business logic services
 ├── api/                 # OpenAPI specification
 ├── config/              # Configuration files
-├── data/                # Database files
 ├── logs/                # Application logs
 └── bin/                 # Built binaries
 ```
@@ -138,13 +136,13 @@ somana-agent/
 
 1. **Go not found**: Make sure Go is installed and in your PATH
 2. **Permission denied**: Run setup script as non-root user
-3. **Service won't start**: Check logs with `journalctl -u somana-agent`
+3. **Service won't start**: Check logs with `journalctl -u sprinter-agent`
 4. **Port already in use**: Change port in config or stop conflicting service
 
 ### Logs
 
 - Application logs: `./logs/somana.log`
-- System logs: `journalctl -u somana-agent`
+- System logs: `journalctl -u sprinter-agent`
 
 ## Contributing
 

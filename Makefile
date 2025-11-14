@@ -1,7 +1,7 @@
-# Makefile for Somana Go project
+# Makefile for Sprinter Go project
 
 # Variables
-BINARY_NAME=somana
+BINARY_NAME=sprinter
 BUILD_DIR=bin
 MAIN_PATH=./cmd/server
 GO_VERSION=1.21.6

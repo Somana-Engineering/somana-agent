@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"somana-agent/internal/client"
-	"somana-agent/internal/config"
+	"sprinter-agent/internal/client"
+	"sprinter-agent/internal/config"
 )
 
 // HostRegistrationService handles registration with main Somana instance

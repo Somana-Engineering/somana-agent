@@ -1,4 +1,4 @@
-module somana-agent
+module sprinter-agent
 
 go 1.21
 

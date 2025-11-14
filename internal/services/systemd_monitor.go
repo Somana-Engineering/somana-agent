@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"somana-agent/internal/client"
-	"somana-agent/internal/config"
+	"sprinter-agent/internal/client"
+	"sprinter-agent/internal/config"
 )
 
 // SystemdMonitorService handles monitoring and reporting systemd services
