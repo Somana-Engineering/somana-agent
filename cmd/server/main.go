@@ -32,11 +32,11 @@ func main() {
 	time.Sleep(2 * time.Second)
 
 	// Start systemd monitoring service
-	hostID := hostRegService.GetHostID()
-	if hostID > 0 {
+	hostRid := hostRegService.GetHostRid()
+	if hostRid != "" {
 		apiClient := hostRegService.GetClient()
 		if apiClient != nil {
-			systemdMonitor := services.NewSystemdMonitorService(cfg, apiClient, hostID)
+			systemdMonitor := services.NewSystemdMonitorService(cfg, apiClient, hostRid)
 			if err := systemdMonitor.Start(); err != nil {
 				log.Printf("Warning: Failed to start systemd monitoring: %v", err)
 			}
