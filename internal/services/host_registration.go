@@ -157,6 +157,7 @@ func (s *HostRegistrationService) registerHost(hostname, ipAddress, osVersion st
 
 	// Register new host
 	reqBody := client.HostCreateRequest{
+		HostRid:   client.HostRid(s.hostRid),
 		Hostname:  hostname,
 		IpAddress: ipAddress,
 		OsName:    osName,

@@ -58,6 +58,9 @@ type Host struct {
 
 // HostCreateRequest defines model for HostCreateRequest.
 type HostCreateRequest struct {
+	// HostRid Reference identifier for a host
+	HostRid HostRid `json:"host_rid"`
+
 	// Hostname Hostname of the system
 	Hostname string `json:"hostname"`
 
