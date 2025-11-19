@@ -22,9 +22,8 @@ jobs:
           export PATH=$PATH:/usr/local/go/bin:$(go env GOPATH)/bin
           # Generate code from OpenAPI spec
           mkdir -p internal/generated
-          oapi-codegen -package generated -generate types api/openapi.yaml > internal/generated/types.go
           oapi-codegen -package generated -generate gin-server api/openapi.yaml > internal/generated/server.go
-          oapi-codegen -package generated -generate client api/openapi.yaml > internal/generated/client.go
+          oapi-codegen -package generated -generate types,client api/openapi.yaml > internal/generated/client.go
       - run: |
           # Install dependencies
           go mod download
