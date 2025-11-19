@@ -12,7 +12,7 @@ type Config struct {
 	// Simplified host registration configuration
 	HostRegistration struct {
 		SprinterURL string `yaml:"sprinter_url"`
-		HostID      string `yaml:"host_id"`
+		HostRid     string `yaml:"host_rid"`
 	} `yaml:"host_registration"`
 }
 
@@ -22,10 +22,10 @@ func LoadConfig(configPath string) (*Config, error) {
 	config := &Config{
 		HostRegistration: struct {
 			SprinterURL string `yaml:"sprinter_url"`
-			HostID      string `yaml:"host_id"`
+			HostRid     string `yaml:"host_rid"`
 		}{
 			SprinterURL: "http://localhost:8081",
-			HostID:      "",
+			HostRid:     "",
 		},
 	}
 

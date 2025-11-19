@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -21,7 +20,7 @@ import (
 type HostRegistrationService struct {
 	config   *config.Config
 	client   *client.ClientWithResponses
-	hostID   int
+	hostRid  string
 	stopChan chan bool
 }
 
@@ -76,13 +75,13 @@ func (s *HostRegistrationService) Start() error {
 	// Start heartbeat goroutine
 	go s.startHeartbeat()
 
-	log.Printf("Host registration started - Host ID: %d", s.hostID)
+	log.Printf("Host registration started - Host RID: %s", s.hostRid)
 	return nil
 }
 
-// GetHostID returns the host ID
-func (s *HostRegistrationService) GetHostID() int {
-	return s.hostID
+// GetHostRid returns the host RID
+func (s *HostRegistrationService) GetHostRid() string {
+	return s.hostRid
 }
 
 // GetClient returns the API client
@@ -104,29 +103,26 @@ func (s *HostRegistrationService) registerHost(hostname, ipAddress, osVersion st
 
 	log.Printf("Attempting to register host: %s (%s) - %s", hostname, ipAddress, osVersion)
 
-	// Check if we have a host ID in config
-	if s.config.HostRegistration.HostID != "" {
-		hostID, err := strconv.Atoi(s.config.HostRegistration.HostID)
-		if err != nil {
-			return fmt.Errorf("invalid host ID in config: %w", err)
-		}
+	// Check if we have a host RID in config
+	if s.config.HostRegistration.HostRid != "" {
+		hostRid := s.config.HostRegistration.HostRid
 
-		log.Printf("Checking if host ID %d exists", hostID)
+		log.Printf("Checking if host RID %s exists", hostRid)
 		
-		// Check if host exists with this ID
-		resp, err := s.client.GetApiV1HostsIdWithResponse(ctx, hostID)
+		// Check if host exists with this RID
+		resp, err := s.client.GetApiV1HostsHostRidWithResponse(ctx, client.HostRid(hostRid))
 		if err != nil {
 			log.Printf("Failed to check host existence: %v", err)
 			return fmt.Errorf("failed to check host existence: %w", err)
 		}
 
 		if resp.StatusCode() == http.StatusOK && resp.JSON200 != nil {
-			// Host exists with this ID, use it
-			s.hostID = hostID
-			log.Printf("Found existing host with ID: %d", s.hostID)
+			// Host exists with this RID, use it
+			s.hostRid = hostRid
+			log.Printf("Found existing host with RID: %s", s.hostRid)
 			return nil
 		} else {
-			log.Printf("Host with ID %d does not exist, will create new host", hostID)
+			log.Printf("Host with RID %s does not exist, will create new host", hostRid)
 		}
 	}
 
@@ -162,15 +158,15 @@ func (s *HostRegistrationService) registerHost(hostname, ipAddress, osVersion st
 		return fmt.Errorf("no host data in response")
 	}
 
-	s.hostID = int(resp.JSON201.Id)
-	s.config.HostRegistration.HostID = fmt.Sprintf("%d", s.hostID)
+	s.hostRid = string(resp.JSON201.HostRid)
+	s.config.HostRegistration.HostRid = s.hostRid
 
 	// Save updated config
 	if err := config.SaveConfig(s.config, "config/config.yaml"); err != nil {
-		log.Printf("Warning: failed to save host ID to config: %v", err)
+		log.Printf("Warning: failed to save host RID to config: %v", err)
 	}
 
-	log.Printf("Successfully registered host with ID: %d", s.hostID)
+	log.Printf("Successfully registered host with RID: %s", s.hostRid)
 	return nil
 }
 
@@ -198,7 +194,7 @@ func (s *HostRegistrationService) sendHeartbeat() error {
 	// API changed: status field removed, server tracks last_heartbeat automatically
 	reqBody := client.HostHeartbeatRequest{}
 
-	resp, err := s.client.PostApiV1HostsIdHeartbeatWithResponse(ctx, s.hostID, reqBody)
+	resp, err := s.client.PostApiV1HostsHostRidHeartbeatWithResponse(ctx, client.HostRid(s.hostRid), reqBody)
 	if err != nil {
 		return fmt.Errorf("failed to send heartbeat: %w", err)
 	}

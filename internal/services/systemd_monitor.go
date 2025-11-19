@@ -17,37 +17,37 @@ import (
 type SystemdMonitorService struct {
 	config   *config.Config
 	client   *client.ClientWithResponses
-	hostID   int
+	hostRid  string
 	stopChan chan bool
 }
 
 // NewSystemdMonitorService creates a new systemd monitor service
-func NewSystemdMonitorService(cfg *config.Config, apiClient *client.ClientWithResponses, hostID int) *SystemdMonitorService {
+func NewSystemdMonitorService(cfg *config.Config, apiClient *client.ClientWithResponses, hostRid string) *SystemdMonitorService {
 	return &SystemdMonitorService{
 		config:   cfg,
 		client:   apiClient,
-		hostID:   hostID,
+		hostRid:  hostRid,
 		stopChan: make(chan bool),
 	}
 }
 
 // Start begins monitoring systemd services and reporting them periodically
 func (s *SystemdMonitorService) Start() error {
-	if s.hostID == 0 {
-		log.Println("Host ID not set - skipping systemd monitoring")
+	if s.hostRid == "" {
+		log.Println("Host RID not set - skipping systemd monitoring")
 		return nil
 	}
 
 	// Start monitoring goroutine
 	go s.monitorLoop()
 
-	log.Printf("Systemd monitoring service started for host ID: %d", s.hostID)
+	log.Printf("Systemd monitoring service started for host RID: %s", s.hostRid)
 	return nil
 }
 
 // Stop stops the monitoring process
 func (s *SystemdMonitorService) Stop() {
-	if s.hostID != 0 {
+	if s.hostRid != "" {
 		close(s.stopChan)
 		log.Println("Systemd monitoring service stopped")
 	}
@@ -85,7 +85,7 @@ func (s *SystemdMonitorService) reportSystemdServices() {
 	}
 
 	ctx := context.Background()
-	resp, err := s.client.PutApiV1HostsIdSystemdServicesWithResponse(ctx, s.hostID, reqBody)
+	resp, err := s.client.PutApiV1HostsHostRidSystemdServicesWithResponse(ctx, client.HostRid(s.hostRid), reqBody)
 	if err != nil {
 		log.Printf("Failed to report systemd services: %v", err)
 		return

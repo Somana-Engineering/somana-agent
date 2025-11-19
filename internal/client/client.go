@@ -31,11 +31,11 @@ type Host struct {
 	// DeletedAt When the host was deregistered (soft delete)
 	DeletedAt *time.Time `json:"deleted_at"`
 
+	// HostRid Reference identifier for a host
+	HostRid HostRid `json:"host_rid"`
+
 	// Hostname Hostname of the system
 	Hostname string `json:"hostname"`
-
-	// Id Unique identifier for the host
-	Id int64 `json:"id"`
 
 	// IpAddress Primary IP address
 	IpAddress string `json:"ip_address"`
@@ -74,6 +74,9 @@ type HostCreateRequest struct {
 // HostHeartbeatRequest defines model for HostHeartbeatRequest.
 type HostHeartbeatRequest = map[string]interface{}
 
+// HostRid Reference identifier for a host
+type HostRid = string
+
 // HostUpdateRequest defines model for HostUpdateRequest.
 type HostUpdateRequest struct {
 	// Hostname Hostname of the system
@@ -110,14 +113,14 @@ type SystemdUnit struct {
 // PostApiV1HostsJSONRequestBody defines body for PostApiV1Hosts for application/json ContentType.
 type PostApiV1HostsJSONRequestBody = HostCreateRequest
 
-// PutApiV1HostsIdJSONRequestBody defines body for PutApiV1HostsId for application/json ContentType.
-type PutApiV1HostsIdJSONRequestBody = HostUpdateRequest
+// PutApiV1HostsHostRidJSONRequestBody defines body for PutApiV1HostsHostRid for application/json ContentType.
+type PutApiV1HostsHostRidJSONRequestBody = HostUpdateRequest
 
-// PostApiV1HostsIdHeartbeatJSONRequestBody defines body for PostApiV1HostsIdHeartbeat for application/json ContentType.
-type PostApiV1HostsIdHeartbeatJSONRequestBody = HostHeartbeatRequest
+// PostApiV1HostsHostRidHeartbeatJSONRequestBody defines body for PostApiV1HostsHostRidHeartbeat for application/json ContentType.
+type PostApiV1HostsHostRidHeartbeatJSONRequestBody = HostHeartbeatRequest
 
-// PutApiV1HostsIdSystemdServicesJSONRequestBody defines body for PutApiV1HostsIdSystemdServices for application/json ContentType.
-type PutApiV1HostsIdSystemdServicesJSONRequestBody = SystemdServicesRequest
+// PutApiV1HostsHostRidSystemdServicesJSONRequestBody defines body for PutApiV1HostsHostRidSystemdServices for application/json ContentType.
+type PutApiV1HostsHostRidSystemdServicesJSONRequestBody = SystemdServicesRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -200,26 +203,26 @@ type ClientInterface interface {
 
 	PostApiV1Hosts(ctx context.Context, body PostApiV1HostsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteApiV1HostsId request
-	DeleteApiV1HostsId(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteApiV1HostsHostRid request
+	DeleteApiV1HostsHostRid(ctx context.Context, hostRid HostRid, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiV1HostsId request
-	GetApiV1HostsId(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetApiV1HostsHostRid request
+	GetApiV1HostsHostRid(ctx context.Context, hostRid HostRid, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PutApiV1HostsIdWithBody request with any body
-	PutApiV1HostsIdWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PutApiV1HostsHostRidWithBody request with any body
+	PutApiV1HostsHostRidWithBody(ctx context.Context, hostRid HostRid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutApiV1HostsId(ctx context.Context, id int, body PutApiV1HostsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutApiV1HostsHostRid(ctx context.Context, hostRid HostRid, body PutApiV1HostsHostRidJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostApiV1HostsIdHeartbeatWithBody request with any body
-	PostApiV1HostsIdHeartbeatWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostApiV1HostsHostRidHeartbeatWithBody request with any body
+	PostApiV1HostsHostRidHeartbeatWithBody(ctx context.Context, hostRid HostRid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostApiV1HostsIdHeartbeat(ctx context.Context, id int, body PostApiV1HostsIdHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiV1HostsHostRidHeartbeat(ctx context.Context, hostRid HostRid, body PostApiV1HostsHostRidHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PutApiV1HostsIdSystemdServicesWithBody request with any body
-	PutApiV1HostsIdSystemdServicesWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PutApiV1HostsHostRidSystemdServicesWithBody request with any body
+	PutApiV1HostsHostRidSystemdServicesWithBody(ctx context.Context, hostRid HostRid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutApiV1HostsIdSystemdServices(ctx context.Context, id int, body PutApiV1HostsIdSystemdServicesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutApiV1HostsHostRidSystemdServices(ctx context.Context, hostRid HostRid, body PutApiV1HostsHostRidSystemdServicesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetHealth request
 	GetHealth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -261,8 +264,8 @@ func (c *Client) PostApiV1Hosts(ctx context.Context, body PostApiV1HostsJSONRequ
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteApiV1HostsId(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteApiV1HostsIdRequest(c.Server, id)
+func (c *Client) DeleteApiV1HostsHostRid(ctx context.Context, hostRid HostRid, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteApiV1HostsHostRidRequest(c.Server, hostRid)
 	if err != nil {
 		return nil, err
 	}
@@ -273,8 +276,8 @@ func (c *Client) DeleteApiV1HostsId(ctx context.Context, id int, reqEditors ...R
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiV1HostsId(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiV1HostsIdRequest(c.Server, id)
+func (c *Client) GetApiV1HostsHostRid(ctx context.Context, hostRid HostRid, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiV1HostsHostRidRequest(c.Server, hostRid)
 	if err != nil {
 		return nil, err
 	}
@@ -285,8 +288,8 @@ func (c *Client) GetApiV1HostsId(ctx context.Context, id int, reqEditors ...Requ
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutApiV1HostsIdWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutApiV1HostsIdRequestWithBody(c.Server, id, contentType, body)
+func (c *Client) PutApiV1HostsHostRidWithBody(ctx context.Context, hostRid HostRid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutApiV1HostsHostRidRequestWithBody(c.Server, hostRid, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -297,8 +300,8 @@ func (c *Client) PutApiV1HostsIdWithBody(ctx context.Context, id int, contentTyp
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutApiV1HostsId(ctx context.Context, id int, body PutApiV1HostsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutApiV1HostsIdRequest(c.Server, id, body)
+func (c *Client) PutApiV1HostsHostRid(ctx context.Context, hostRid HostRid, body PutApiV1HostsHostRidJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutApiV1HostsHostRidRequest(c.Server, hostRid, body)
 	if err != nil {
 		return nil, err
 	}
@@ -309,8 +312,8 @@ func (c *Client) PutApiV1HostsId(ctx context.Context, id int, body PutApiV1Hosts
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiV1HostsIdHeartbeatWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV1HostsIdHeartbeatRequestWithBody(c.Server, id, contentType, body)
+func (c *Client) PostApiV1HostsHostRidHeartbeatWithBody(ctx context.Context, hostRid HostRid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1HostsHostRidHeartbeatRequestWithBody(c.Server, hostRid, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -321,8 +324,8 @@ func (c *Client) PostApiV1HostsIdHeartbeatWithBody(ctx context.Context, id int, 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiV1HostsIdHeartbeat(ctx context.Context, id int, body PostApiV1HostsIdHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV1HostsIdHeartbeatRequest(c.Server, id, body)
+func (c *Client) PostApiV1HostsHostRidHeartbeat(ctx context.Context, hostRid HostRid, body PostApiV1HostsHostRidHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1HostsHostRidHeartbeatRequest(c.Server, hostRid, body)
 	if err != nil {
 		return nil, err
 	}
@@ -333,8 +336,8 @@ func (c *Client) PostApiV1HostsIdHeartbeat(ctx context.Context, id int, body Pos
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutApiV1HostsIdSystemdServicesWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutApiV1HostsIdSystemdServicesRequestWithBody(c.Server, id, contentType, body)
+func (c *Client) PutApiV1HostsHostRidSystemdServicesWithBody(ctx context.Context, hostRid HostRid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutApiV1HostsHostRidSystemdServicesRequestWithBody(c.Server, hostRid, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -345,8 +348,8 @@ func (c *Client) PutApiV1HostsIdSystemdServicesWithBody(ctx context.Context, id 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutApiV1HostsIdSystemdServices(ctx context.Context, id int, body PutApiV1HostsIdSystemdServicesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutApiV1HostsIdSystemdServicesRequest(c.Server, id, body)
+func (c *Client) PutApiV1HostsHostRidSystemdServices(ctx context.Context, hostRid HostRid, body PutApiV1HostsHostRidSystemdServicesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutApiV1HostsHostRidSystemdServicesRequest(c.Server, hostRid, body)
 	if err != nil {
 		return nil, err
 	}
@@ -436,13 +439,13 @@ func NewPostApiV1HostsRequestWithBody(server string, contentType string, body io
 	return req, nil
 }
 
-// NewDeleteApiV1HostsIdRequest generates requests for DeleteApiV1HostsId
-func NewDeleteApiV1HostsIdRequest(server string, id int) (*http.Request, error) {
+// NewDeleteApiV1HostsHostRidRequest generates requests for DeleteApiV1HostsHostRid
+func NewDeleteApiV1HostsHostRidRequest(server string, hostRid HostRid) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostRid", runtime.ParamLocationPath, hostRid)
 	if err != nil {
 		return nil, err
 	}
@@ -470,13 +473,13 @@ func NewDeleteApiV1HostsIdRequest(server string, id int) (*http.Request, error) 
 	return req, nil
 }
 
-// NewGetApiV1HostsIdRequest generates requests for GetApiV1HostsId
-func NewGetApiV1HostsIdRequest(server string, id int) (*http.Request, error) {
+// NewGetApiV1HostsHostRidRequest generates requests for GetApiV1HostsHostRid
+func NewGetApiV1HostsHostRidRequest(server string, hostRid HostRid) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostRid", runtime.ParamLocationPath, hostRid)
 	if err != nil {
 		return nil, err
 	}
@@ -504,24 +507,24 @@ func NewGetApiV1HostsIdRequest(server string, id int) (*http.Request, error) {
 	return req, nil
 }
 
-// NewPutApiV1HostsIdRequest calls the generic PutApiV1HostsId builder with application/json body
-func NewPutApiV1HostsIdRequest(server string, id int, body PutApiV1HostsIdJSONRequestBody) (*http.Request, error) {
+// NewPutApiV1HostsHostRidRequest calls the generic PutApiV1HostsHostRid builder with application/json body
+func NewPutApiV1HostsHostRidRequest(server string, hostRid HostRid, body PutApiV1HostsHostRidJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPutApiV1HostsIdRequestWithBody(server, id, "application/json", bodyReader)
+	return NewPutApiV1HostsHostRidRequestWithBody(server, hostRid, "application/json", bodyReader)
 }
 
-// NewPutApiV1HostsIdRequestWithBody generates requests for PutApiV1HostsId with any type of body
-func NewPutApiV1HostsIdRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+// NewPutApiV1HostsHostRidRequestWithBody generates requests for PutApiV1HostsHostRid with any type of body
+func NewPutApiV1HostsHostRidRequestWithBody(server string, hostRid HostRid, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostRid", runtime.ParamLocationPath, hostRid)
 	if err != nil {
 		return nil, err
 	}
@@ -551,24 +554,24 @@ func NewPutApiV1HostsIdRequestWithBody(server string, id int, contentType string
 	return req, nil
 }
 
-// NewPostApiV1HostsIdHeartbeatRequest calls the generic PostApiV1HostsIdHeartbeat builder with application/json body
-func NewPostApiV1HostsIdHeartbeatRequest(server string, id int, body PostApiV1HostsIdHeartbeatJSONRequestBody) (*http.Request, error) {
+// NewPostApiV1HostsHostRidHeartbeatRequest calls the generic PostApiV1HostsHostRidHeartbeat builder with application/json body
+func NewPostApiV1HostsHostRidHeartbeatRequest(server string, hostRid HostRid, body PostApiV1HostsHostRidHeartbeatJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV1HostsIdHeartbeatRequestWithBody(server, id, "application/json", bodyReader)
+	return NewPostApiV1HostsHostRidHeartbeatRequestWithBody(server, hostRid, "application/json", bodyReader)
 }
 
-// NewPostApiV1HostsIdHeartbeatRequestWithBody generates requests for PostApiV1HostsIdHeartbeat with any type of body
-func NewPostApiV1HostsIdHeartbeatRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostApiV1HostsHostRidHeartbeatRequestWithBody generates requests for PostApiV1HostsHostRidHeartbeat with any type of body
+func NewPostApiV1HostsHostRidHeartbeatRequestWithBody(server string, hostRid HostRid, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostRid", runtime.ParamLocationPath, hostRid)
 	if err != nil {
 		return nil, err
 	}
@@ -598,24 +601,24 @@ func NewPostApiV1HostsIdHeartbeatRequestWithBody(server string, id int, contentT
 	return req, nil
 }
 
-// NewPutApiV1HostsIdSystemdServicesRequest calls the generic PutApiV1HostsIdSystemdServices builder with application/json body
-func NewPutApiV1HostsIdSystemdServicesRequest(server string, id int, body PutApiV1HostsIdSystemdServicesJSONRequestBody) (*http.Request, error) {
+// NewPutApiV1HostsHostRidSystemdServicesRequest calls the generic PutApiV1HostsHostRidSystemdServices builder with application/json body
+func NewPutApiV1HostsHostRidSystemdServicesRequest(server string, hostRid HostRid, body PutApiV1HostsHostRidSystemdServicesJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPutApiV1HostsIdSystemdServicesRequestWithBody(server, id, "application/json", bodyReader)
+	return NewPutApiV1HostsHostRidSystemdServicesRequestWithBody(server, hostRid, "application/json", bodyReader)
 }
 
-// NewPutApiV1HostsIdSystemdServicesRequestWithBody generates requests for PutApiV1HostsIdSystemdServices with any type of body
-func NewPutApiV1HostsIdSystemdServicesRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+// NewPutApiV1HostsHostRidSystemdServicesRequestWithBody generates requests for PutApiV1HostsHostRidSystemdServices with any type of body
+func NewPutApiV1HostsHostRidSystemdServicesRequestWithBody(server string, hostRid HostRid, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "hostRid", runtime.ParamLocationPath, hostRid)
 	if err != nil {
 		return nil, err
 	}
@@ -723,26 +726,26 @@ type ClientWithResponsesInterface interface {
 
 	PostApiV1HostsWithResponse(ctx context.Context, body PostApiV1HostsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1HostsResponse, error)
 
-	// DeleteApiV1HostsIdWithResponse request
-	DeleteApiV1HostsIdWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteApiV1HostsIdResponse, error)
+	// DeleteApiV1HostsHostRidWithResponse request
+	DeleteApiV1HostsHostRidWithResponse(ctx context.Context, hostRid HostRid, reqEditors ...RequestEditorFn) (*DeleteApiV1HostsHostRidResponse, error)
 
-	// GetApiV1HostsIdWithResponse request
-	GetApiV1HostsIdWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetApiV1HostsIdResponse, error)
+	// GetApiV1HostsHostRidWithResponse request
+	GetApiV1HostsHostRidWithResponse(ctx context.Context, hostRid HostRid, reqEditors ...RequestEditorFn) (*GetApiV1HostsHostRidResponse, error)
 
-	// PutApiV1HostsIdWithBodyWithResponse request with any body
-	PutApiV1HostsIdWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiV1HostsIdResponse, error)
+	// PutApiV1HostsHostRidWithBodyWithResponse request with any body
+	PutApiV1HostsHostRidWithBodyWithResponse(ctx context.Context, hostRid HostRid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiV1HostsHostRidResponse, error)
 
-	PutApiV1HostsIdWithResponse(ctx context.Context, id int, body PutApiV1HostsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiV1HostsIdResponse, error)
+	PutApiV1HostsHostRidWithResponse(ctx context.Context, hostRid HostRid, body PutApiV1HostsHostRidJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiV1HostsHostRidResponse, error)
 
-	// PostApiV1HostsIdHeartbeatWithBodyWithResponse request with any body
-	PostApiV1HostsIdHeartbeatWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1HostsIdHeartbeatResponse, error)
+	// PostApiV1HostsHostRidHeartbeatWithBodyWithResponse request with any body
+	PostApiV1HostsHostRidHeartbeatWithBodyWithResponse(ctx context.Context, hostRid HostRid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1HostsHostRidHeartbeatResponse, error)
 
-	PostApiV1HostsIdHeartbeatWithResponse(ctx context.Context, id int, body PostApiV1HostsIdHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1HostsIdHeartbeatResponse, error)
+	PostApiV1HostsHostRidHeartbeatWithResponse(ctx context.Context, hostRid HostRid, body PostApiV1HostsHostRidHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1HostsHostRidHeartbeatResponse, error)
 
-	// PutApiV1HostsIdSystemdServicesWithBodyWithResponse request with any body
-	PutApiV1HostsIdSystemdServicesWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiV1HostsIdSystemdServicesResponse, error)
+	// PutApiV1HostsHostRidSystemdServicesWithBodyWithResponse request with any body
+	PutApiV1HostsHostRidSystemdServicesWithBodyWithResponse(ctx context.Context, hostRid HostRid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiV1HostsHostRidSystemdServicesResponse, error)
 
-	PutApiV1HostsIdSystemdServicesWithResponse(ctx context.Context, id int, body PutApiV1HostsIdSystemdServicesJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiV1HostsIdSystemdServicesResponse, error)
+	PutApiV1HostsHostRidSystemdServicesWithResponse(ctx context.Context, hostRid HostRid, body PutApiV1HostsHostRidSystemdServicesJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiV1HostsHostRidSystemdServicesResponse, error)
 
 	// GetHealthWithResponse request
 	GetHealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthResponse, error)
@@ -795,7 +798,7 @@ func (r PostApiV1HostsResponse) StatusCode() int {
 	return 0
 }
 
-type DeleteApiV1HostsIdResponse struct {
+type DeleteApiV1HostsHostRidResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON404      *Error
@@ -803,7 +806,7 @@ type DeleteApiV1HostsIdResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteApiV1HostsIdResponse) Status() string {
+func (r DeleteApiV1HostsHostRidResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -811,63 +814,14 @@ func (r DeleteApiV1HostsIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteApiV1HostsIdResponse) StatusCode() int {
+func (r DeleteApiV1HostsHostRidResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetApiV1HostsIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *Host
-	JSON404      *Error
-	JSON500      *Error
-}
-
-// Status returns HTTPResponse.Status
-func (r GetApiV1HostsIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetApiV1HostsIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PutApiV1HostsIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *Host
-	JSON400      *Error
-	JSON404      *Error
-	JSON500      *Error
-}
-
-// Status returns HTTPResponse.Status
-func (r PutApiV1HostsIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PutApiV1HostsIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostApiV1HostsIdHeartbeatResponse struct {
+type GetApiV1HostsHostRidResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Host
@@ -876,7 +830,7 @@ type PostApiV1HostsIdHeartbeatResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostApiV1HostsIdHeartbeatResponse) Status() string {
+func (r GetApiV1HostsHostRidResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -884,14 +838,14 @@ func (r PostApiV1HostsIdHeartbeatResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV1HostsIdHeartbeatResponse) StatusCode() int {
+func (r GetApiV1HostsHostRidResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PutApiV1HostsIdSystemdServicesResponse struct {
+type PutApiV1HostsHostRidResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Host
@@ -901,7 +855,7 @@ type PutApiV1HostsIdSystemdServicesResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PutApiV1HostsIdSystemdServicesResponse) Status() string {
+func (r PutApiV1HostsHostRidResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -909,7 +863,56 @@ func (r PutApiV1HostsIdSystemdServicesResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PutApiV1HostsIdSystemdServicesResponse) StatusCode() int {
+func (r PutApiV1HostsHostRidResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV1HostsHostRidHeartbeatResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Host
+	JSON404      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV1HostsHostRidHeartbeatResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV1HostsHostRidHeartbeatResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutApiV1HostsHostRidSystemdServicesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Host
+	JSON400      *Error
+	JSON404      *Error
+	JSON500      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PutApiV1HostsHostRidSystemdServicesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutApiV1HostsHostRidSystemdServicesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -968,73 +971,73 @@ func (c *ClientWithResponses) PostApiV1HostsWithResponse(ctx context.Context, bo
 	return ParsePostApiV1HostsResponse(rsp)
 }
 
-// DeleteApiV1HostsIdWithResponse request returning *DeleteApiV1HostsIdResponse
-func (c *ClientWithResponses) DeleteApiV1HostsIdWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteApiV1HostsIdResponse, error) {
-	rsp, err := c.DeleteApiV1HostsId(ctx, id, reqEditors...)
+// DeleteApiV1HostsHostRidWithResponse request returning *DeleteApiV1HostsHostRidResponse
+func (c *ClientWithResponses) DeleteApiV1HostsHostRidWithResponse(ctx context.Context, hostRid HostRid, reqEditors ...RequestEditorFn) (*DeleteApiV1HostsHostRidResponse, error) {
+	rsp, err := c.DeleteApiV1HostsHostRid(ctx, hostRid, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteApiV1HostsIdResponse(rsp)
+	return ParseDeleteApiV1HostsHostRidResponse(rsp)
 }
 
-// GetApiV1HostsIdWithResponse request returning *GetApiV1HostsIdResponse
-func (c *ClientWithResponses) GetApiV1HostsIdWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetApiV1HostsIdResponse, error) {
-	rsp, err := c.GetApiV1HostsId(ctx, id, reqEditors...)
+// GetApiV1HostsHostRidWithResponse request returning *GetApiV1HostsHostRidResponse
+func (c *ClientWithResponses) GetApiV1HostsHostRidWithResponse(ctx context.Context, hostRid HostRid, reqEditors ...RequestEditorFn) (*GetApiV1HostsHostRidResponse, error) {
+	rsp, err := c.GetApiV1HostsHostRid(ctx, hostRid, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiV1HostsIdResponse(rsp)
+	return ParseGetApiV1HostsHostRidResponse(rsp)
 }
 
-// PutApiV1HostsIdWithBodyWithResponse request with arbitrary body returning *PutApiV1HostsIdResponse
-func (c *ClientWithResponses) PutApiV1HostsIdWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiV1HostsIdResponse, error) {
-	rsp, err := c.PutApiV1HostsIdWithBody(ctx, id, contentType, body, reqEditors...)
+// PutApiV1HostsHostRidWithBodyWithResponse request with arbitrary body returning *PutApiV1HostsHostRidResponse
+func (c *ClientWithResponses) PutApiV1HostsHostRidWithBodyWithResponse(ctx context.Context, hostRid HostRid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiV1HostsHostRidResponse, error) {
+	rsp, err := c.PutApiV1HostsHostRidWithBody(ctx, hostRid, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutApiV1HostsIdResponse(rsp)
+	return ParsePutApiV1HostsHostRidResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutApiV1HostsIdWithResponse(ctx context.Context, id int, body PutApiV1HostsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiV1HostsIdResponse, error) {
-	rsp, err := c.PutApiV1HostsId(ctx, id, body, reqEditors...)
+func (c *ClientWithResponses) PutApiV1HostsHostRidWithResponse(ctx context.Context, hostRid HostRid, body PutApiV1HostsHostRidJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiV1HostsHostRidResponse, error) {
+	rsp, err := c.PutApiV1HostsHostRid(ctx, hostRid, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutApiV1HostsIdResponse(rsp)
+	return ParsePutApiV1HostsHostRidResponse(rsp)
 }
 
-// PostApiV1HostsIdHeartbeatWithBodyWithResponse request with arbitrary body returning *PostApiV1HostsIdHeartbeatResponse
-func (c *ClientWithResponses) PostApiV1HostsIdHeartbeatWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1HostsIdHeartbeatResponse, error) {
-	rsp, err := c.PostApiV1HostsIdHeartbeatWithBody(ctx, id, contentType, body, reqEditors...)
+// PostApiV1HostsHostRidHeartbeatWithBodyWithResponse request with arbitrary body returning *PostApiV1HostsHostRidHeartbeatResponse
+func (c *ClientWithResponses) PostApiV1HostsHostRidHeartbeatWithBodyWithResponse(ctx context.Context, hostRid HostRid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1HostsHostRidHeartbeatResponse, error) {
+	rsp, err := c.PostApiV1HostsHostRidHeartbeatWithBody(ctx, hostRid, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiV1HostsIdHeartbeatResponse(rsp)
+	return ParsePostApiV1HostsHostRidHeartbeatResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostApiV1HostsIdHeartbeatWithResponse(ctx context.Context, id int, body PostApiV1HostsIdHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1HostsIdHeartbeatResponse, error) {
-	rsp, err := c.PostApiV1HostsIdHeartbeat(ctx, id, body, reqEditors...)
+func (c *ClientWithResponses) PostApiV1HostsHostRidHeartbeatWithResponse(ctx context.Context, hostRid HostRid, body PostApiV1HostsHostRidHeartbeatJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1HostsHostRidHeartbeatResponse, error) {
+	rsp, err := c.PostApiV1HostsHostRidHeartbeat(ctx, hostRid, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiV1HostsIdHeartbeatResponse(rsp)
+	return ParsePostApiV1HostsHostRidHeartbeatResponse(rsp)
 }
 
-// PutApiV1HostsIdSystemdServicesWithBodyWithResponse request with arbitrary body returning *PutApiV1HostsIdSystemdServicesResponse
-func (c *ClientWithResponses) PutApiV1HostsIdSystemdServicesWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiV1HostsIdSystemdServicesResponse, error) {
-	rsp, err := c.PutApiV1HostsIdSystemdServicesWithBody(ctx, id, contentType, body, reqEditors...)
+// PutApiV1HostsHostRidSystemdServicesWithBodyWithResponse request with arbitrary body returning *PutApiV1HostsHostRidSystemdServicesResponse
+func (c *ClientWithResponses) PutApiV1HostsHostRidSystemdServicesWithBodyWithResponse(ctx context.Context, hostRid HostRid, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiV1HostsHostRidSystemdServicesResponse, error) {
+	rsp, err := c.PutApiV1HostsHostRidSystemdServicesWithBody(ctx, hostRid, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutApiV1HostsIdSystemdServicesResponse(rsp)
+	return ParsePutApiV1HostsHostRidSystemdServicesResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutApiV1HostsIdSystemdServicesWithResponse(ctx context.Context, id int, body PutApiV1HostsIdSystemdServicesJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiV1HostsIdSystemdServicesResponse, error) {
-	rsp, err := c.PutApiV1HostsIdSystemdServices(ctx, id, body, reqEditors...)
+func (c *ClientWithResponses) PutApiV1HostsHostRidSystemdServicesWithResponse(ctx context.Context, hostRid HostRid, body PutApiV1HostsHostRidSystemdServicesJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiV1HostsHostRidSystemdServicesResponse, error) {
+	rsp, err := c.PutApiV1HostsHostRidSystemdServices(ctx, hostRid, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutApiV1HostsIdSystemdServicesResponse(rsp)
+	return ParsePutApiV1HostsHostRidSystemdServicesResponse(rsp)
 }
 
 // GetHealthWithResponse request returning *GetHealthResponse
@@ -1119,15 +1122,15 @@ func ParsePostApiV1HostsResponse(rsp *http.Response) (*PostApiV1HostsResponse, e
 	return response, nil
 }
 
-// ParseDeleteApiV1HostsIdResponse parses an HTTP response from a DeleteApiV1HostsIdWithResponse call
-func ParseDeleteApiV1HostsIdResponse(rsp *http.Response) (*DeleteApiV1HostsIdResponse, error) {
+// ParseDeleteApiV1HostsHostRidResponse parses an HTTP response from a DeleteApiV1HostsHostRidWithResponse call
+func ParseDeleteApiV1HostsHostRidResponse(rsp *http.Response) (*DeleteApiV1HostsHostRidResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteApiV1HostsIdResponse{
+	response := &DeleteApiV1HostsHostRidResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1152,15 +1155,15 @@ func ParseDeleteApiV1HostsIdResponse(rsp *http.Response) (*DeleteApiV1HostsIdRes
 	return response, nil
 }
 
-// ParseGetApiV1HostsIdResponse parses an HTTP response from a GetApiV1HostsIdWithResponse call
-func ParseGetApiV1HostsIdResponse(rsp *http.Response) (*GetApiV1HostsIdResponse, error) {
+// ParseGetApiV1HostsHostRidResponse parses an HTTP response from a GetApiV1HostsHostRidWithResponse call
+func ParseGetApiV1HostsHostRidResponse(rsp *http.Response) (*GetApiV1HostsHostRidResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiV1HostsIdResponse{
+	response := &GetApiV1HostsHostRidResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1192,15 +1195,15 @@ func ParseGetApiV1HostsIdResponse(rsp *http.Response) (*GetApiV1HostsIdResponse,
 	return response, nil
 }
 
-// ParsePutApiV1HostsIdResponse parses an HTTP response from a PutApiV1HostsIdWithResponse call
-func ParsePutApiV1HostsIdResponse(rsp *http.Response) (*PutApiV1HostsIdResponse, error) {
+// ParsePutApiV1HostsHostRidResponse parses an HTTP response from a PutApiV1HostsHostRidWithResponse call
+func ParsePutApiV1HostsHostRidResponse(rsp *http.Response) (*PutApiV1HostsHostRidResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PutApiV1HostsIdResponse{
+	response := &PutApiV1HostsHostRidResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1239,15 +1242,15 @@ func ParsePutApiV1HostsIdResponse(rsp *http.Response) (*PutApiV1HostsIdResponse,
 	return response, nil
 }
 
-// ParsePostApiV1HostsIdHeartbeatResponse parses an HTTP response from a PostApiV1HostsIdHeartbeatWithResponse call
-func ParsePostApiV1HostsIdHeartbeatResponse(rsp *http.Response) (*PostApiV1HostsIdHeartbeatResponse, error) {
+// ParsePostApiV1HostsHostRidHeartbeatResponse parses an HTTP response from a PostApiV1HostsHostRidHeartbeatWithResponse call
+func ParsePostApiV1HostsHostRidHeartbeatResponse(rsp *http.Response) (*PostApiV1HostsHostRidHeartbeatResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostApiV1HostsIdHeartbeatResponse{
+	response := &PostApiV1HostsHostRidHeartbeatResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1279,15 +1282,15 @@ func ParsePostApiV1HostsIdHeartbeatResponse(rsp *http.Response) (*PostApiV1Hosts
 	return response, nil
 }
 
-// ParsePutApiV1HostsIdSystemdServicesResponse parses an HTTP response from a PutApiV1HostsIdSystemdServicesWithResponse call
-func ParsePutApiV1HostsIdSystemdServicesResponse(rsp *http.Response) (*PutApiV1HostsIdSystemdServicesResponse, error) {
+// ParsePutApiV1HostsHostRidSystemdServicesResponse parses an HTTP response from a PutApiV1HostsHostRidSystemdServicesWithResponse call
+func ParsePutApiV1HostsHostRidSystemdServicesResponse(rsp *http.Response) (*PutApiV1HostsHostRidSystemdServicesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PutApiV1HostsIdSystemdServicesResponse{
+	response := &PutApiV1HostsHostRidSystemdServicesResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

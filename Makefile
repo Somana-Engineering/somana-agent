@@ -6,7 +6,7 @@ BUILD_DIR=bin
 MAIN_PATH=./cmd/server
 GO_VERSION=1.21.6
 GO_ARCH=linux-arm64
-OPENAPI_VERSION=v1.0.30
+OPENAPI_VERSION=v1.0.35
 
 # Go parameters - check if go is available, otherwise use full path
 GOCMD=$(shell if command -v go > /dev/null; then echo go; else echo /usr/local/go/bin/go; fi)
@@ -65,7 +65,7 @@ create-config:
 	@mkdir -p logs
 	@if [ ! -f config/config.yaml ]; then \
 		echo "Creating default config.yaml..."; \
-		cp config/config.yaml.example config/config.yaml 2>/dev/null || echo 'host_registration:\n  sprinter_url: "http://localhost:8081"\n  host_id: ""' > config/config.yaml; \
+		cp config/config.yaml.example config/config.yaml 2>/dev/null || echo 'host_registration:\n  sprinter_url: "http://localhost:8081"\n  host_rid: ""' > config/config.yaml; \
 	fi
 
 # Build the application (includes code generation)
