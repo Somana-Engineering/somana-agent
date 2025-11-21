@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -59,7 +60,7 @@ func (s *HostRegistrationService) Start() error {
 		return fmt.Errorf("failed to get hostname: %w", err)
 	}
 
-	ipAddress, err := s.getLocalIP()
+	ipAddress, err := s.getIP()
 	if err != nil {
 		return fmt.Errorf("failed to get IP address: %w", err)
 	}
@@ -338,8 +339,44 @@ func (s *HostRegistrationService) sendHeartbeat() error {
 	return nil
 }
 
-// getLocalIP gets the local IP address
-func (s *HostRegistrationService) getLocalIP() (string, error) {
+// getIP gets the IP address, preferring Tailscale IP if available
+func (s *HostRegistrationService) getIP() (string, error) {
+	// Try to get IP from tailscale first
+	cmd := exec.Command("tailscale", "ip")
+	output, err := cmd.Output()
+	if err != nil {
+		// Check if tailscale command exists
+		if _, lookErr := exec.LookPath("tailscale"); lookErr != nil {
+			log.Printf("tailscale command not found in PATH, falling back to hostname lookup")
+		} else {
+			// Command exists but failed - get stderr for details
+			var exitError *exec.ExitError
+			if errors.As(err, &exitError) {
+				stderr := string(exitError.Stderr)
+				log.Printf("tailscale ip command failed (exit code %d): %s, falling back to hostname lookup", exitError.ExitCode(), stderr)
+			} else {
+				log.Printf("tailscale ip command failed: %v, falling back to hostname lookup", err)
+			}
+		}
+	} else {
+		// Command succeeded, parse output
+		lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+		if len(lines) > 0 && lines[0] != "" {
+			ip := strings.TrimSpace(lines[0])
+			// Validate it's a valid IP address
+			if parsedIP := net.ParseIP(ip); parsedIP != nil {
+				log.Printf("Using Tailscale IP: %s", ip)
+				return ip, nil
+			} else {
+				log.Printf("tailscale ip returned invalid IP address: %s, falling back to hostname lookup", ip)
+			}
+		} else {
+			log.Printf("tailscale ip returned empty output, falling back to hostname lookup")
+		}
+	}
+
+	// Fallback to original method if tailscale is not available
+	log.Printf("Falling back to hostname lookup for IP address")
 	hostname, err := os.Hostname()
 	if err != nil {
 		return "", err
