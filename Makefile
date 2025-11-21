@@ -15,7 +15,7 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOMOD=$(GOCMD) mod
 
-.PHONY: all build clean test deps generate run help publish-openapi download-api install-go install-tools setup
+.PHONY: all build clean test deps generate run help publish-openapi install-go install-tools setup
 
 # Default target
 all: clean build
@@ -53,7 +53,7 @@ install-tools: install-go
 	fi
 
 # Complete setup including Go installation
-setup: install-tools download-api deps generate create-config
+setup: install-tools deps generate create-config
 	@echo "Setup completed successfully!"
 	@echo "If you get 'go: command not found' errors, run: source ~/.bashrc"
 
@@ -113,15 +113,15 @@ deps:
 		exit 1; \
 	fi
 
-# Download OpenAPI specification from GitHub
-download-api:
+# Download OpenAPI specification from GitHub (only if file doesn't exist)
+api/openapi.yaml:
 	@echo "Downloading OpenAPI specification from GitHub (version: $(OPENAPI_VERSION))..."
 	@mkdir -p api
 	@curl -L -o api/openapi.yaml https://github.com/miku-kookie/somana/releases/download/$(OPENAPI_VERSION)/openapi.yaml
 	@echo "OpenAPI specification downloaded to api/openapi.yaml"
 
 # Generate code from OpenAPI spec
-generate: download-api
+generate: api/openapi.yaml
 	@echo "Generating code from OpenAPI spec..."
 	@mkdir -p internal/generated
 	@export PATH=$$PATH:/usr/local/go/bin:$$HOME/go/bin; \
@@ -175,8 +175,7 @@ help:
 	@echo "  clean         - Clean build artifacts and generated files"
 	@echo "  test          - Run tests"
 	@echo "  deps          - Install dependencies"
-	@echo "  download-api  - Download OpenAPI specification from GitHub"
-	@echo "  generate      - Generate code from OpenAPI spec"
+	@echo "  generate      - Generate code from OpenAPI spec (downloads api/openapi.yaml if needed)"
 	@echo "  generate-docs - Generate Swagger documentation"
 	@echo "  publish-openapi - Publish OpenAPI spec to GitHub releases"
 	@echo "  run           - Generate, build and run the application"
