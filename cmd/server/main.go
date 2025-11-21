@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"sync"
 	"time"
 
 	"sprinter-agent/internal/config"
@@ -23,25 +24,38 @@ func main() {
 	// Create host registration service
 	hostRegService := services.NewHostRegistrationService(cfg)
 
-	// Start host registration and heartbeat
+	// Start host registration and heartbeat (runs in background, retries until successful)
 	if err := hostRegService.Start(); err != nil {
 		log.Printf("Warning: Failed to start host registration: %v", err)
 	}
 
-	// Wait a moment for host registration to complete
+	// Wait a moment for host registration to potentially complete
 	time.Sleep(2 * time.Second)
 
-	// Start systemd monitoring service
-	hostRid := hostRegService.GetHostRid()
-	if hostRid != "" {
-		apiClient := hostRegService.GetClient()
-		if apiClient != nil {
-			systemdMonitor := services.NewSystemdMonitorService(cfg, apiClient, hostRid)
-			if err := systemdMonitor.Start(); err != nil {
-				log.Printf("Warning: Failed to start systemd monitoring: %v", err)
+	// Start systemd monitoring service (will start once host is registered)
+	// Check periodically if host is registered
+	var systemdStarted sync.Once
+	go func() {
+		for {
+			hostRid := hostRegService.GetHostRid()
+			if hostRid != "" {
+				systemdStarted.Do(func() {
+					apiClient := hostRegService.GetClient()
+					if apiClient != nil {
+						systemdMonitor := services.NewSystemdMonitorService(cfg, apiClient, hostRid)
+						if err := systemdMonitor.Start(); err != nil {
+							log.Printf("Warning: Failed to start systemd monitoring: %v", err)
+						} else {
+							log.Printf("Systemd monitoring started for host RID: %s", hostRid)
+						}
+					}
+				})
+				return // Exit goroutine once monitoring is started
 			}
+			// Wait before checking again
+			time.Sleep(5 * time.Second)
 		}
-	}
+	}()
 
 	// Comment out Gin server for now - focus on host registration debugging
 	/*

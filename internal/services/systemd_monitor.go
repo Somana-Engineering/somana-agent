@@ -1,10 +1,13 @@
 package services
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -75,7 +78,23 @@ func (s *SystemdMonitorService) monitorLoop() {
 func (s *SystemdMonitorService) reportSystemdServices() {
 	services, err := s.getSystemdServices()
 	if err != nil {
-		log.Printf("Failed to get systemd services: %v", err)
+		log.Printf("ERROR: Failed to get systemd services: %v", err)
+		// Check if it's a permission error
+		var exitError *exec.ExitError
+		if errors.As(err, &exitError) {
+			if exitError.ExitCode() == 1 {
+				log.Printf("ERROR: systemctl command failed with exit code 1 - this may indicate permission issues")
+				log.Printf("ERROR: Current user: %s, UID: %d, GID: %d", os.Getenv("USER"), os.Getuid(), os.Getgid())
+				if stderr := string(exitError.Stderr); stderr != "" {
+					log.Printf("ERROR: systemctl stderr: %s", stderr)
+				}
+				log.Printf("ERROR: Suggestion: Ensure the service is running with appropriate permissions (may need to run as root or add user to systemd-journal group)")
+			}
+		}
+		// Check for permission denied errors
+		if errors.Is(err, os.ErrPermission) || strings.Contains(err.Error(), "permission denied") {
+			log.Printf("ERROR: Permission denied accessing systemd - ensure the process has appropriate permissions")
+		}
 		// Send empty list if systemd doesn't exist or fails
 		services = []generated.SystemdUnit{}
 	}
@@ -109,8 +128,42 @@ func (s *SystemdMonitorService) getSystemdServices() ([]generated.SystemdUnit, e
 
 	// Run systemctl list-units command
 	cmd := exec.Command("systemctl", "list-units", "--type=service", "--no-pager", "--no-legend")
+	
+	// Capture both stdout and stderr for better error reporting
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	
 	output, err := cmd.Output()
 	if err != nil {
+		// Get stderr output if available
+		stderrStr := strings.TrimSpace(stderr.String())
+		
+		// Check for specific error types
+		var exitError *exec.ExitError
+		if errors.As(err, &exitError) {
+			exitCode := exitError.ExitCode()
+			errMsg := fmt.Sprintf("systemctl command failed with exit code %d", exitCode)
+			if stderrStr != "" {
+				errMsg += fmt.Sprintf(": %s", stderrStr)
+			}
+			
+			// Check for permission-related exit codes
+			if exitCode == 1 {
+				errMsg += " (likely permission issue - systemctl may require elevated privileges)"
+			}
+			
+			return nil, fmt.Errorf("failed to run systemctl: %s: %w", errMsg, err)
+		}
+		
+		// Check for permission denied
+		if errors.Is(err, os.ErrPermission) || strings.Contains(err.Error(), "permission denied") {
+			return nil, fmt.Errorf("permission denied running systemctl (current user: %s, UID: %d): %w", os.Getenv("USER"), os.Getuid(), err)
+		}
+		
+		// Generic error
+		if stderrStr != "" {
+			return nil, fmt.Errorf("failed to run systemctl (stderr: %s): %w", stderrStr, err)
+		}
 		return nil, fmt.Errorf("failed to run systemctl: %w", err)
 	}
 

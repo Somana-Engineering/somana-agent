@@ -70,16 +70,45 @@ func (s *HostRegistrationService) Start() error {
 		osVersion = "Unknown"
 	}
 
-	// Register with main Somana instance
-	if err := s.registerHost(hostname, ipAddress, osVersion); err != nil {
-		return fmt.Errorf("failed to register host: %w", err)
-	}
+	// Start registration retry loop in a goroutine
+	go s.registrationLoop(hostname, ipAddress, osVersion)
 
-	// Start heartbeat goroutine
-	go s.startHeartbeat()
-
-	log.Printf("Host registration started - Host RID: %s", s.hostRid)
+	log.Println("Host registration service started (retrying until successful)")
 	return nil
+}
+
+// registrationLoop continuously retries host registration until successful
+func (s *HostRegistrationService) registrationLoop(hostname, ipAddress, osVersion string) {
+	retryDelay := 5 * time.Second
+	maxRetryDelay := 5 * time.Minute
+
+	for {
+		select {
+		case <-s.stopChan:
+			return
+		default:
+			// Try to register
+			err := s.registerHost(hostname, ipAddress, osVersion)
+			if err == nil {
+				// Registration successful
+				log.Printf("Host registration successful - Host RID: %s", s.hostRid)
+				
+				// Start heartbeat goroutine
+				go s.startHeartbeat()
+				return
+			}
+
+			// Registration failed, log and retry
+			log.Printf("Host registration failed: %v. Retrying in %v...", err, retryDelay)
+			time.Sleep(retryDelay)
+
+			// Exponential backoff with max limit
+			retryDelay = retryDelay * 2
+			if retryDelay > maxRetryDelay {
+				retryDelay = maxRetryDelay
+			}
+		}
+	}
 }
 
 // GetHostRid returns the host RID
@@ -265,11 +294,20 @@ func (s *HostRegistrationService) startHeartbeat() {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
+	// Send initial heartbeat immediately
+	if err := s.sendHeartbeat(); err != nil {
+		log.Printf("Failed to send initial heartbeat: %v", err)
+	} else {
+		log.Printf("Heartbeat sent successfully")
+	}
+
 	for {
 		select {
 		case <-ticker.C:
 			if err := s.sendHeartbeat(); err != nil {
-				log.Printf("Failed to send heartbeat: %v", err)
+				log.Printf("Failed to send heartbeat: %v (will retry on next interval)", err)
+			} else {
+				log.Printf("Heartbeat sent successfully")
 			}
 		case <-s.stopChan:
 			return
@@ -279,6 +317,10 @@ func (s *HostRegistrationService) startHeartbeat() {
 
 // sendHeartbeat sends a heartbeat to the main Somana instance
 func (s *HostRegistrationService) sendHeartbeat() error {
+	if s.hostRid == "" {
+		return fmt.Errorf("host RID not set, skipping heartbeat")
+	}
+
 	ctx := context.Background()
 	
 	// API changed: status field removed, server tracks last_heartbeat automatically
@@ -293,7 +335,6 @@ func (s *HostRegistrationService) sendHeartbeat() error {
 		return fmt.Errorf("heartbeat failed with status: %d", resp.StatusCode())
 	}
 
-	log.Printf("Heartbeat sent successfully")
 	return nil
 }
 
